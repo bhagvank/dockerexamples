@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+
+  javacodegeeks_database:
+    container_name: javacodegeeks_database
+    hostname: javacodegeeks_database
+    image: postgres
+    volumes:
+      - ./volume:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=javacodegeeksdb, javacodegeeksdb_dev
+      - POSTGRES_USER=mhuls
+      - POSTGRES_PASSWORD=aStrongPassword
+    ports:
+      - 54321:5432
+    restart: unless-stopped
+
+
+  javacodegeeks_api:
+    container_name: javacodegeeks_api
+    hostname: javacodegeeks_api
+    build:
+      context: ./javacodegeeks_api
+      dockerfile: Dockerfile
+    ports:
+     - 54322:5000
+    volumes:
+      - ./javacodegeeks_api/src/:/usr/src/app/
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${JAVACODEGEEKS_ENVIRONMENT}
+    depends_on:
+      - javacodegeeks_database
+
+
+  javacodegeeks_webserver:
+      container_name: javacodegeeks_webserver
+      hostname: javacodegeeks_webserver
+      build:
+          context: ./javacodegeeks_webserver
+          dockerfile: Dockerfile
+      ports:
+        - 80:80
+        - 443:443
+      volumes:
+        - ./javacodegeeks_webserver/src/test:/usr/share/nginx/html
+      restart: always
+      depends_on:
+        - javacodegeeks_database
